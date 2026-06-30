@@ -3,6 +3,7 @@
 pub enum Token {
   Text(String)
   HeadingMarker(Int) // level
+  ThematicBreakMarker
   Space(Int) // number of spaces
   Newline
   EOF
@@ -60,11 +61,27 @@ pub fn Lexer::next_token(self: Lexer) -> Token {
       }
       HeadingMarker(level)
     }
+    Some('-') => {
+      let mut count = 0
+      while self.peek_char() == Some('-') {
+        let _ = self.next_char()
+        count += 1
+      }
+      if count >= 3 {
+        ThematicBreakMarker
+      } else {
+        let mut text = ""
+        for i = 0; i < count; i = i + 1 {
+          text += "-"
+        }
+        Text(text)
+      }
+    }
     Some(_) => {
       let mut text = ""
       while true {
         match self.peek_char() {
-          None | Some('\n') | Some(' ') | Some('#') => break
+          None | Some('\n') | Some(' ') | Some('#') | Some('-') => break
           Some(ch) => {
             let _ = self.next_char()
             text += ch.to_string()

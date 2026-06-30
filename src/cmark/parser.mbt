@@ -30,11 +30,17 @@ pub fn Parser::parse(self: Parser) -> Array[Block] {
                 content += "#"
               }
             }
+            ThematicBreakMarker => {
+              content += "---"
+            }
           }
         }
         // naive inline parsing for heading content
         let inline_content = [Inline::Text(content)]
         blocks.push(Block::Heading(level, inline_content))
+      }
+      ThematicBreakMarker => {
+        blocks.push(Block::ThematicBreak)
       }
       _ => {
         // Ignore other tokens for now
