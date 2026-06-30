@@ -36,7 +36,7 @@ pub fn Parser::parse(self: Parser) -> Array[Block] {
           }
         }
         // naive inline parsing for heading content
-        let inline_content = [Inline::Text(content)]
+        let inline_content = parse_inline(content)
         blocks.push(Block::Heading(level, inline_content))
       }
       ThematicBreakMarker => {
@@ -63,7 +63,7 @@ pub fn Parser::parse(self: Parser) -> Array[Block] {
             }
           }
         }
-        let inline_content = [Inline::Text(content)]
+        let inline_content = parse_inline(content)
         blocks.push(Block::Paragraph(inline_content))
       }
       _ => {
