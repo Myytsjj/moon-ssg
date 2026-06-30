@@ -31,7 +31,7 @@ pub fn to_events(blocks: Array[Block]) -> Array[Event] {
       ThematicBreak => {
         events.push(Event::SelfClosing("hr"))
       }
-      _ => { } // unsupported blocks
+      _ => () // unsupported blocks
     }
   }
   
@@ -55,7 +55,7 @@ fn inline_to_events(inline: Inline, events: Array[Event]) -> Unit {
       }
       events.push(Event::EndInline("strong"))
     }
-    _ => { } // unsupported inlines
+    _ => () // unsupported inlines
   }
 }
 

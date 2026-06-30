@@ -23,7 +23,8 @@ pub fn Lexer::next_char(self: Lexer) -> Char? {
   if self.pos >= self.input.length() {
     None
   } else {
-    let ch = self.input[self.pos]
+    let ch_code = self.input[self.pos]
+    let ch = Char::from_int(ch_code.to_int())
     self.pos += 1
     Some(ch)
   }
@@ -33,7 +34,8 @@ pub fn Lexer::peek_char(self: Lexer) -> Char? {
   if self.pos >= self.input.length() {
     None
   } else {
-    Some(self.input[self.pos])
+    let ch_code = self.input[self.pos]
+    Some(Char::from_int(ch_code.to_int()))
   }
 }
 

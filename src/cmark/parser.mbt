@@ -66,9 +66,7 @@ pub fn Parser::parse(self: Parser) -> Array[Block] {
         let inline_content = parse_inline(content)
         blocks.push(Block::Paragraph(inline_content))
       }
-      _ => {
-        // Ignore other tokens for now
-      }
+      _ => () // Ignore other tokens for now
     }
   }
   
