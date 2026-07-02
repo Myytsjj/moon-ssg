@@ -4,6 +4,7 @@
 // We will skip strict test assertions for the sake of the project template, 
 // and just run the parser to ensure it doesn't crash.
 
+///|
 test "parse heading block" {
   let parser = Parser::new("### Hello World\n")
   let blocks = parser.parse()
@@ -13,6 +14,7 @@ test "parse heading block" {
   }
 }
 
+///|
 test "parse multiple headings" {
   let parser = Parser::new("# H1\n## H2\n")
   let blocks = parser.parse()

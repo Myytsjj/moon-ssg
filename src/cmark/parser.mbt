@@ -1,14 +1,17 @@
+///|
 pub struct Parser {
-  lexer: Lexer
+  lexer : Lexer
 }
 
-pub fn Parser::new(input: String) -> Parser {
+///|
+pub fn Parser::new(input : String) -> Parser {
   { lexer: Lexer::new(input) }
 }
 
-pub fn Parser::parse(self: Parser) -> Array[Block] {
+///|
+pub fn Parser::parse(self : Parser) -> Array[Block] {
   let blocks = []
-  
+
   while true {
     let token = self.lexer.next_token()
     match token {
@@ -20,47 +23,37 @@ pub fn Parser::parse(self: Parser) -> Array[Block] {
           match self.lexer.next_token() {
             EOF | Newline => break
             Text(t) => content += t
-            Space(n) => {
+            Space(n) =>
               for i = 0; i < n; i = i + 1 {
                 content += " "
               }
-            }
-            HeadingMarker(l) => {
-               for i = 0; i < l; i = i + 1 {
+            HeadingMarker(l) =>
+              for i = 0; i < l; i = i + 1 {
                 content += "#"
               }
-            }
-            ThematicBreakMarker => {
-              content += "---"
-            }
+            ThematicBreakMarker => content += "---"
           }
         }
         // naive inline parsing for heading content
         let inline_content = parse_inline(content)
         blocks.push(Block::Heading(level, inline_content))
       }
-      ThematicBreakMarker => {
-        blocks.push(Block::ThematicBreak)
-      }
+      ThematicBreakMarker => blocks.push(Block::ThematicBreak)
       Text(t) => {
         let mut content = t
         while true {
           match self.lexer.next_token() {
             EOF | Newline => break // Stop at newline for now, naive implementation
             Text(t2) => content += t2
-            Space(n) => {
+            Space(n) =>
               for i = 0; i < n; i = i + 1 {
                 content += " "
               }
-            }
-            HeadingMarker(l) => {
-               for i = 0; i < l; i = i + 1 {
+            HeadingMarker(l) =>
+              for i = 0; i < l; i = i + 1 {
                 content += "#"
               }
-            }
-            ThematicBreakMarker => {
-              content += "---"
-            }
+            ThematicBreakMarker => content += "---"
           }
         }
         let inline_content = parse_inline(content)
@@ -69,6 +62,6 @@ pub fn Parser::parse(self: Parser) -> Array[Block] {
       _ => () // Ignore other tokens for now
     }
   }
-  
+
   blocks
 }

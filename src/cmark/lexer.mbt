@@ -1,5 +1,6 @@
 // Lexer and Token definitions
 
+///|
 pub enum Token {
   Text(String)
   HeadingMarker(Int) // level
@@ -10,36 +11,41 @@ pub enum Token {
   // To be expanded
 }
 
+///|
 pub struct Lexer {
-  input: String
-  mut pos: Int
+  input : String
+  mut pos : Int
 }
 
-pub fn Lexer::new(input: String) -> Lexer {
+///|
+pub fn Lexer::new(input : String) -> Lexer {
   { input, pos: 0 }
 }
 
-pub fn Lexer::next_char(self: Lexer) -> Char? {
+///|
+pub fn Lexer::next_char(self : Lexer) -> Char? {
   if self.pos >= self.input.length() {
     None
   } else {
     let ch_code = self.input[self.pos]
-    let ch = Char::from_int(ch_code.to_int())
+    let ch = ch_code.to_int().unsafe_to_char()
     self.pos += 1
     Some(ch)
   }
 }
 
-pub fn Lexer::peek_char(self: Lexer) -> Char? {
+///|
+pub fn Lexer::peek_char(self : Lexer) -> Char? {
   if self.pos >= self.input.length() {
     None
   } else {
     let ch_code = self.input[self.pos]
-    Some(Char::from_int(ch_code.to_int()))
+    Some(ch_code.to_int().unsafe_to_char())
   }
 }
 
-pub fn Lexer::next_token(self: Lexer) -> Token {
+///|
+pub fn Lexer::next_token(self : Lexer) -> Token {
   // basic implementation, will be enhanced
   match self.peek_char() {
     None => EOF
