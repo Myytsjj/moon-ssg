@@ -1,4 +1,4 @@
-name = "moon-cmark"
+name = "moon-ssg"
 
 version = "0.1.0"
 

@@ -1,0 +1,7 @@
+import {
+  "moon-ssg/src/markdown",
+}
+
+options(
+  "is-main": false,
+)
