@@ -1,5 +1,5 @@
 import {
-  "myytsjj/moon-ssg/src/ssg",
+  "Myytsjj/moon-ssg/src/ssg",
   "moonbitlang/x/fs",
 }
 
