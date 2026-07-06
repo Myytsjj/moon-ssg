@@ -8,7 +8,7 @@ pub enum Block {
   CodeBlock(String, String) // Info string, Content
   Blockquote(Array[Block])
   List(Bool, Array[Array[Block]]) // IsOrdered, Items
-}
+} derive(Eq, Debug)
 
 ///|
 pub enum Inline {
@@ -20,16 +20,10 @@ pub enum Inline {
   Image(String, String, String) // URL, Title, AltText
   HardBreak
   SoftBreak
-}
+} derive(Eq, Debug)
 
 ///|
-test "dummy use of AST variants for warning suppression" {
-  let _ = Block::CodeBlock("info", "content")
-  let _ = Block::Blockquote([])
-  let _ = Block::List(false, [])
-  let _ = Inline::CodeSpan("code")
-  let _ = Inline::Link("url", "title", [])
-  let _ = Inline::Image("url", "title", "alt")
+test "suppress unused constructor warnings" {
   let _ = Inline::HardBreak
   let _ = Inline::SoftBreak
 }

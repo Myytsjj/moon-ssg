@@ -1,24 +1,54 @@
-// Tests for heading parsing
-
-// Note: To compile these tests successfully, we need Eq implementations for the AST.
-// We will skip strict test assertions for the sake of the project template, 
-// and just run the parser to ensure it doesn't crash.
-
 ///|
-test "parse heading block" {
-  let parser = Parser::new("### Hello World\n")
-  let blocks = parser.parse()
-  // Ensure we parsed exactly one block
-  if blocks.length() != 1 {
-    abort("expected 1 block")
-  }
-}
+test "parse block elements" {
+  let parser1 = Parser::new("### Hello *MoonBit*\n\nThis is a paragraph.")
+  debug_inspect(
+    parser1.parse(),
+    content=(
+      #|[
+      #|  Heading(3, [Text("Hello "), Emphasis([Text("MoonBit")])]),
+      #|  Paragraph([Text("This is a paragraph.")]),
+      #|]
+    ),
+  )
 
-///|
-test "parse multiple headings" {
-  let parser = Parser::new("# H1\n## H2\n")
-  let blocks = parser.parse()
-  if blocks.length() != 2 {
-    abort("expected 2 blocks")
-  }
+  let parser2 = Parser::new("```moonbit\nfn main {}\n```")
+  debug_inspect(
+    parser2.parse(),
+    content=(
+      #|[CodeBlock("moonbit", "fn main {}")]
+    ),
+  )
+
+  let parser3 = Parser::new("> This is a blockquote\n> containing text.")
+  debug_inspect(
+    parser3.parse(),
+    content=(
+      #|[Blockquote([Paragraph([Text("This is a blockquote containing text.")])])]
+    ),
+  )
+
+  let parser4 = Parser::new("* Item 1\n* Item 2\n\n1. First\n2. Second")
+  debug_inspect(
+    parser4.parse(),
+    content=(
+      #|[
+      #|  List(
+      #|    false,
+      #|    [[Paragraph([Text("Item 1")])], [Paragraph([Text("Item 2")])]],
+      #|  ),
+      #|  List(
+      #|    true,
+      #|    [[Paragraph([Text("First")])], [Paragraph([Text("Second")])]],
+      #|  ),
+      #|]
+    ),
+  )
+
+  let parser5 = Parser::new("---")
+  debug_inspect(
+    parser5.parse(),
+    content=(
+      #|[ThematicBreak]
+    ),
+  )
 }

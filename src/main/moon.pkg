@@ -1,0 +1,8 @@
+import {
+  "myytsjj/moon-ssg/src/ssg",
+  "moonbitlang/x/fs",
+}
+
+options(
+  "is-main": true,
+)

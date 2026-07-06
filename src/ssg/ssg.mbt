@@ -131,9 +131,9 @@ pub fn generate_site(
 ///|
 fn render_post(post : BlogPost, template : String) -> String {
   let mut res = template
-  res = res.replace(old="{{title}}", new=post.title)
-  res = res.replace(old="{{date}}", new=post.date)
-  res = res.replace(old="{{content}}", new=post.content_html)
+  res = res.replace_all(old="{{title}}", new=post.title)
+  res = res.replace_all(old="{{date}}", new=post.date)
+  res = res.replace_all(old="{{content}}", new=post.content_html)
   res
 }
 
@@ -141,7 +141,7 @@ fn render_post(post : BlogPost, template : String) -> String {
 fn render_index(posts : Array[BlogPost], template : String) -> String {
   let mut list_html = "<ul>\n"
   for post in posts {
-    let link = post.filename.replace(old=".md", new=".html")
+    let link = post.filename.replace_all(old=".md", new=".html")
     list_html += "  <li><span class=\"date\">" +
       post.date +
       "</span> - <a href=\"" +
@@ -153,7 +153,7 @@ fn render_index(posts : Array[BlogPost], template : String) -> String {
   list_html += "</ul>"
 
   let mut res = template
-  res = res.replace(old="{{title}}", new="Blog Index")
-  res = res.replace(old="{{posts}}", new=list_html)
+  res = res.replace_all(old="{{title}}", new="Blog Index")
+  res = res.replace_all(old="{{posts}}", new=list_html)
   res
 }
