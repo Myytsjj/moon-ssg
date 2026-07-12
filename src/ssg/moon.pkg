@@ -1,5 +1,6 @@
 import {
   "Myytsjj/moon-ssg/src/markdown",
+  "moonbitlang/core/json",
 }
 
 options(

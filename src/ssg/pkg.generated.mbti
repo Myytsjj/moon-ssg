@@ -1,0 +1,60 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Myytsjj/moon-ssg/src/ssg"
+
+import {
+  "moonbitlang/core/debug",
+  "moonbitlang/core/json",
+}
+
+// Values
+pub fn escape_json_str(String) -> String
+
+pub fn generate_site(Array[(String, String)], String, String, String, String, Config, Bool) -> Array[GeneratedPage]
+
+pub fn parse_front_matter(String) -> (BlogPostMetadata, String)
+
+// Errors
+
+// Types and methods
+pub struct BlogPost {
+  title : String
+  date : String
+  filename : String
+  content_html : String
+  tags : Array[String]
+  categories : Array[String]
+  draft : Bool
+  metadata : Map[String, String]
+} derive(Eq, @debug.Debug)
+
+pub struct BlogPostMetadata {
+  title : String
+  date : String
+  draft : Bool
+  tags : Array[String]
+  categories : Array[String]
+  raw : Map[String, String]
+} derive(@debug.Debug)
+
+pub struct Config {
+  site_title : String
+  site_description : String
+  site_url : String
+  posts_per_page : Int
+  content_dir : String
+  layouts_dir : String
+  public_dir : String
+  static_dir : String
+} derive(ToJson, @debug.Debug, @json.FromJson)
+pub fn Config::default() -> Self
+pub fn Config::make(String, String, String, Int, String, String, String, String) -> Self
+
+pub struct GeneratedPage {
+  path : String
+  html : String
+} derive(Eq, @debug.Debug)
+
+// Type aliases
+
+// Traits
+

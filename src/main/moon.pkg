@@ -1,6 +1,8 @@
 import {
   "Myytsjj/moon-ssg/src/ssg",
   "moonbitlang/x/fs",
+  "moonbitlang/core/json",
+  "moonbitlang/core/env",
 }
 
 options(

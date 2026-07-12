@@ -3,3 +3,4 @@ _build/
 public/
 .repos/
 .mooncakes/
+ssg.config.json

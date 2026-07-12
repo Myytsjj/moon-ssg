@@ -1,0 +1,74 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Myytsjj/moon-ssg/src/markdown"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn parse_inline(String) -> Array[Inline]
+
+pub fn render_html(Array[Event]) -> String
+
+pub fn to_events(Array[Block]) -> Array[Event]
+
+// Errors
+
+// Types and methods
+pub enum Block {
+  Heading(Int, Array[Inline])
+  Paragraph(Array[Inline])
+  ThematicBreak
+  CodeBlock(String, String)
+  Blockquote(Array[Block])
+  List(Bool, Array[Array[Block]])
+} derive(Eq, @debug.Debug)
+
+pub enum Event {
+  StartBlock(String)
+  EndBlock(String)
+  StartInline(String)
+  EndInline(String)
+  TextEvent(String)
+  SelfClosing(String)
+}
+
+pub enum Inline {
+  Text(String)
+  CodeSpan(String)
+  Emphasis(Array[Inline])
+  Strong(Array[Inline])
+  Link(String, String, Array[Inline])
+  Image(String, String, String)
+  HardBreak
+  SoftBreak
+} derive(Eq, @debug.Debug)
+
+pub struct Lexer {
+  input : String
+  mut pos : Int
+}
+pub fn Lexer::new(String) -> Self
+pub fn Lexer::next_char(Self) -> Char?
+pub fn Lexer::next_token(Self) -> Token
+pub fn Lexer::peek_char(Self) -> Char?
+
+pub struct Parser {
+  lexer : Lexer
+}
+pub fn Parser::new(String) -> Self
+pub fn Parser::parse(Self) -> Array[Block]
+
+pub enum Token {
+  Text(String)
+  HeadingMarker(Int)
+  ThematicBreakMarker
+  Space(Int)
+  Newline
+  EOF
+}
+
+// Type aliases
+
+// Traits
+

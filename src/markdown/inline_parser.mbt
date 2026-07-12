@@ -1,4 +1,5 @@
 // Helper to get character at index
+
 ///|
 fn char_at(text : StringView, index : Int) -> Char {
   text[index].to_int().unsafe_to_char()

@@ -1,19 +1,75 @@
+// Main entry point for moon-ssg CLI tool
+
 ///|
 fn main {
-  let content_dir = "content"
-  let layouts_dir = "layouts"
-  let public_dir = "public"
+  let default_config_path = "ssg.config.json"
+  let args = @env.args()
+
+  let mut config_path = default_config_path
+  let mut include_drafts = false
+
+  let mut i = 0
+  while i < args.length() {
+    let arg = args[i]
+    if arg == "--drafts" || arg == "-d" {
+      include_drafts = true
+      i += 1
+    } else if arg == "--config" || arg == "-c" {
+      if i + 1 < args.length() {
+        config_path = args[i + 1]
+        i += 2
+      } else {
+        println("Error: --config requires a path parameter")
+        return
+      }
+    } else if arg.has_prefix("--config=") {
+      config_path = arg[9:].to_owned()
+      i += 1
+    } else if arg.has_prefix("-c=") {
+      config_path = arg[3:].to_owned()
+      i += 1
+    } else {
+      i += 1
+    }
+  }
 
   println("[moon-ssg] Starting static site generation...")
+  println("[moon-ssg] Using configuration: " + config_path)
 
   try {
-    // 1. Initialize default content and layouts if missing
+    // 1. Read or generate configuration
+    let config : @ssg.Config = if !@fs.path_exists(config_path) {
+      let default_config = @ssg.Config::default()
+      let json_val = default_config.to_json()
+      @fs.write_string_to_file(config_path, json_val.stringify())
+      println("[moon-ssg] Generated default configuration file: " + config_path)
+      default_config
+    } else {
+      let config_str = @fs.read_file_to_string(config_path)
+      let json_val = @json.parse(config_str)
+      let parsed_config : @ssg.Config = @json.from_json(json_val)
+      parsed_config
+    }
+
+    let content_dir = config.content_dir
+    let layouts_dir = config.layouts_dir
+    let public_dir = config.public_dir
+    let static_dir = config.static_dir
+
+    // 2. Initialize default structures if missing
     if !@fs.path_exists(content_dir) {
       @fs.create_dir(content_dir)
+      println("[moon-ssg] Created '" + content_dir + "' directory.")
+    }
+
+    if !@fs.path_exists(content_dir + "/hello-world.md") {
       let default_post =
         #|---
         #|title: Hello MoonBit!
         #|date: 2026-07-06
+        #|tags: [MoonBit, WebAssembly, Programming]
+        #|categories: [Technology]
+        #|draft: false
         #|---
         #|# Welcome to MoonBit Static Site Generator
         #|
@@ -22,24 +78,23 @@ fn main {
         #|## Features Supported
         #|
         #|* **Markdown Parsing**: Write in standard Markdown.
-        #|* **Code Highlighting**:
-        #|  ```moonbit
-        #|  fn main {
-        #|    println("Hello World")
-        #|  }
-        #|  ```
-        #|* **Blockquotes**:
-        #|  > MoonBit is a fast, lightweight language for WebAssembly and Native backends.
+        #|* **Taxonomies**: Categorize posts with tags and categories.
+        #|* **Pagination**: Automatically page home listing page.
+        #|* **RSS Feed**: Out-of-the-box RSS 2.0 XML support.
+        #|* **Search Index**: Generated JSON index for client-side search.
+        #|* **Static Files**: Automatic recursive copying of style assets.
         #|
         #|Enjoy writing!
       @fs.write_string_to_file(content_dir + "/hello-world.md", default_post)
-      println(
-        "[moon-ssg] Created default '" + content_dir + "' directory and post.",
-      )
+      println("[moon-ssg] Created default post hello-world.md.")
     }
 
     if !@fs.path_exists(layouts_dir) {
       @fs.create_dir(layouts_dir)
+      println("[moon-ssg] Created '" + layouts_dir + "' directory.")
+    }
+
+    if !@fs.path_exists(layouts_dir + "/post.html") {
       let post_layout =
         #|<!DOCTYPE html>
         #|<html lang="en">
@@ -47,63 +102,221 @@ fn main {
         #|  <meta charset="UTF-8">
         #|  <meta name="viewport" content="width=device-width, initial-scale=1.0">
         #|  <title>{{title}}</title>
-        #|  <style>
-        #|    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 2rem; color: #333; background: #fafafa; }
-        #|    h1 { color: #111; margin-bottom: 0.5rem; }
-        #|    .date { color: #666; margin-bottom: 2rem; font-style: italic; }
-        #|    pre { background: #eee; padding: 1rem; overflow-x: auto; border-radius: 4px; }
-        #|    blockquote { border-left: 4px solid #ccc; padding-left: 1rem; margin-left: 0; color: #555; }
-        #|    a { color: #0076ff; text-decoration: none; }
-        #|    a:hover { text-decoration: underline; }
-        #|  </style>
+        #|  <link rel="stylesheet" href="style.css">
         #|</head>
         #|<body>
-        #|  <p><a href="index.html">← Back to Home</a></p>
-        #|  <article>
-        #|    <h1>{{title}}</h1>
-        #|    <div class="date">{{date}}</div>
-        #|    <div class="content">{{content}}</div>
-        #|  </article>
+        #|  <div class="container">
+        #|    <p><a href="index.html">← Back to Home</a></p>
+        #|    <article>
+        #|      <h1>{{title}}</h1>
+        #|      <div class="date">{{date}}</div>
+        #|      {{categories}}
+        #|      <div class="content">{{content}}</div>
+        #|      {{tags}}
+        #|    </article>
+        #|  </div>
         #|</body>
         #|</html>
       @fs.write_string_to_file(layouts_dir + "/post.html", post_layout)
+      println("[moon-ssg] Created default layout post.html.")
+    }
 
+    if !@fs.path_exists(layouts_dir + "/index.html") {
       let index_layout =
         #|<!DOCTYPE html>
         #|<html lang="en">
         #|<head>
         #|  <meta charset="UTF-8">
         #|  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        #|  <title>My Static Site</title>
-        #|  <style>
-        #|    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 2rem; color: #333; background: #fafafa; }
-        #|    h1 { color: #111; }
-        #|    ul { list-style: none; padding: 0; }
-        #|    li { margin-bottom: 1rem; font-size: 1.1rem; }
-        #|    .date { color: #666; margin-right: 1rem; }
-        #|    a { color: #0076ff; text-decoration: none; font-weight: bold; }
-        #|    a:hover { text-decoration: underline; }
-        #|  </style>
+        #|  <title>{{title}}</title>
+        #|  <link rel="stylesheet" href="style.css">
         #|</head>
         #|<body>
-        #|  <header>
-        #|    <h1>Welcome to My Blog</h1>
-        #|    <p>Generated with <a href="https://github.com/Myytsjj/moon-ssg">moon-ssg</a> (written in MoonBit).</p>
-        #|  </header>
-        #|  <main>
-        #|    {{posts}}
-        #|  </main>
+        #|  <div class="container">
+        #|    <header>
+        #|      <h1>Welcome to My Blog</h1>
+        #|      <p>Generated with <a href="https://github.com/Myytsjj/moon-ssg">moon-ssg</a> (written in MoonBit).</p>
+        #|    </header>
+        #|    <main>
+        #|      {{posts}}
+        #|      {{pagination}}
+        #|    </main>
+        #|  </div>
         #|</body>
         #|</html>
       @fs.write_string_to_file(layouts_dir + "/index.html", index_layout)
-      println("[moon-ssg] Created default '" + layouts_dir + "' templates.")
+      println("[moon-ssg] Created default layout index.html.")
     }
 
-    // 2. Read templates
+    if !@fs.path_exists(layouts_dir + "/tag.html") {
+      let tag_layout =
+        #|<!DOCTYPE html>
+        #|<html lang="en">
+        #|<head>
+        #|  <meta charset="UTF-8">
+        #|  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        #|  <title>Tag: {{tag}}</title>
+        #|  <link rel="stylesheet" href="style.css">
+        #|</head>
+        #|<body>
+        #|  <div class="container">
+        #|    <p><a href="index.html">← Back to Home</a></p>
+        #|    <h1>Posts tagged with "{{tag}}"</h1>
+        #|    {{posts}}
+        #|  </div>
+        #|</body>
+        #|</html>
+      @fs.write_string_to_file(layouts_dir + "/tag.html", tag_layout)
+      println("[moon-ssg] Created default layout tag.html.")
+    }
+
+    if !@fs.path_exists(layouts_dir + "/category.html") {
+      let category_layout =
+        #|<!DOCTYPE html>
+        #|<html lang="en">
+        #|<head>
+        #|  <meta charset="UTF-8">
+        #|  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        #|  <title>Category: {{category}}</title>
+        #|  <link rel="stylesheet" href="style.css">
+        #|</head>
+        #|<body>
+        #|  <div class="container">
+        #|    <p><a href="index.html">← Back to Home</a></p>
+        #|    <h1>Category: "{{category}}"</h1>
+        #|    {{posts}}
+        #|  </div>
+        #|</body>
+        #|</html>
+      @fs.write_string_to_file(layouts_dir + "/category.html", category_layout)
+      println("[moon-ssg] Created default layout category.html.")
+    }
+
+    if !@fs.path_exists(static_dir) {
+      @fs.create_dir(static_dir)
+      println("[moon-ssg] Created '" + static_dir + "' directory.")
+    }
+
+    if !@fs.path_exists(static_dir + "/style.css") {
+      let default_css =
+        #|/* Premium Glassmorphism & Dark-Accent Theme for moon-ssg */
+        #|:root {
+        #|  --primary: #6f46ff;
+        #|  --primary-hover: #5732d6;
+        #|  --bg: #0b0c10;
+        #|  --card-bg: rgba(26, 29, 38, 0.6);
+        #|  --text: #c5c6c7;
+        #|  --text-heading: #ffffff;
+        #|  --accent: #45f3ff;
+        #|  --border: rgba(255, 255, 255, 0.08);
+        #|}
+        #|
+        #|body {
+        #|  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+        #|  line-height: 1.7;
+        #|  background: var(--bg);
+        #|  color: var(--text);
+        #|  margin: 0;
+        #|  padding: 0;
+        #|}
+        #|
+        #|.container {
+        #|  max-width: 800px;
+        #|  margin: 0 auto;
+        #|  padding: 3rem 1.5rem;
+        #|}
+        #|
+        #|header {
+        #|  border-bottom: 1px solid var(--border);
+        #|  padding-bottom: 2rem;
+        #|  margin-bottom: 3rem;
+        #|}
+        #|
+        #|h1, h2, h3 {
+        #|  color: var(--text-heading);
+        #|  font-weight: 700;
+        #|  letter-spacing: -0.02em;
+        #|}
+        #|
+        #|h1 { font-size: 2.5rem; margin-top: 0; }
+        #|
+        #|a {
+        #|  color: var(--accent);
+        #|  text-decoration: none;
+        #|  transition: color 0.2s ease;
+        #|}
+        #|
+        #|a:hover {
+        #|  color: var(--primary);
+        #|}
+        #|
+        #|.date {
+        #|  color: #888;
+        #|  font-size: 0.9rem;
+        #|  margin-bottom: 1.5rem;
+        #|}
+        #|
+        #|ul {
+        #|  list-style: none;
+        #|  padding: 0;
+        #|}
+        #|
+        #|li {
+        #|  background: var(--card-bg);
+        #|  border: 1px solid var(--border);
+        #|  border-radius: 12px;
+        #|  padding: 1.5rem;
+        #|  margin-bottom: 1.25rem;
+        #|  transition: transform 0.2s ease, box-shadow 0.2s ease;
+        #|  backdrop-filter: blur(8px);
+        #|}
+        #|
+        #|li:hover {
+        #|  transform: translateY(-2px);
+        #|  box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+        #|}
+        #|
+        #|pre {
+        #|  background: rgba(0, 0, 0, 0.4);
+        #|  border: 1px solid var(--border);
+        #|  border-radius: 8px;
+        #|  padding: 1.25rem;
+        #|  overflow-x: auto;
+        #|  font-family: 'Fira Code', monospace;
+        #|}
+        #|
+        #|blockquote {
+        #|  border-left: 4px solid var(--primary);
+        #|  background: rgba(111, 70, 255, 0.05);
+        #|  padding: 1rem 1.5rem;
+        #|  margin: 1.5rem 0;
+        #|  border-radius: 0 8px 8px 0;
+        #|}
+        #|
+        #|.pagination {
+        #|  display: flex;
+        #|  justify-content: space-between;
+        #|  align-items: center;
+        #|  margin-top: 3rem;
+        #|}
+        #|
+        #|.post-tags, .post-categories {
+        #|  margin: 1.5rem 0;
+        #|  font-size: 0.9rem;
+        #|}
+      @fs.write_string_to_file(static_dir + "/style.css", default_css)
+      println("[moon-ssg] Created default stylesheet style.css.")
+    }
+
+    // 3. Read templates
     let post_template = @fs.read_file_to_string(layouts_dir + "/post.html")
     let index_template = @fs.read_file_to_string(layouts_dir + "/index.html")
+    let tag_template = @fs.read_file_to_string(layouts_dir + "/tag.html")
+    let category_template = @fs.read_file_to_string(
+      layouts_dir + "/category.html",
+    )
 
-    // 3. Scan content files
+    // 4. Scan content files
     let sources = []
     let files = @fs.read_dir(content_dir)
     for file in files {
@@ -117,30 +330,57 @@ fn main {
       println(
         "[moon-ssg] Warning: No markdown files found in '" +
         content_dir +
-        "' directory.",
+        "' folder.",
       )
     }
 
-    // 4. Generate the site
-    let pages = @ssg.generate_site(sources, post_template, index_template)
+    // 5. Generate the site
+    let pages = @ssg.generate_site(
+      sources, post_template, index_template, tag_template, category_template, config,
+      include_drafts,
+    )
 
-    // 5. Ensure output directory exists
+    // 6. Ensure public directory exists
     if !@fs.path_exists(public_dir) {
       @fs.create_dir(public_dir)
     }
 
-    // 6. Write pages to output folder
+    // 7. Write generated pages
     for page in pages {
       let out_path = public_dir + "/" + page.path
       @fs.write_string_to_file(out_path, page.html)
       println("  -> Generated " + out_path)
     }
 
+    // 8. Copy static assets recursive
+    if @fs.path_exists(static_dir) {
+      copy_dir_recursive(static_dir, public_dir)
+      println("[moon-ssg] Copied static assets recursively.")
+    }
+
     println("[moon-ssg] Site successfully generated!")
   } catch {
     err => {
       println("[moon-ssg] Error occurred during generation:")
-      println(err.to_repr().to_string())
+      println(to_repr(err).to_string())
+    }
+  }
+}
+
+///|
+fn copy_dir_recursive(src : String, dst : String) -> Unit raise Error {
+  if !@fs.path_exists(dst) {
+    @fs.create_dir(dst)
+  }
+  let files = @fs.read_dir(src)
+  for file in files {
+    let src_path = src + "/" + file
+    let dst_path = dst + "/" + file
+    if @fs.is_dir(src_path) {
+      copy_dir_recursive(src_path, dst_path)
+    } else {
+      let bytes = @fs.read_file_to_bytes(src_path)
+      @fs.write_bytes_to_file(dst_path, bytes)
     }
   }
 }
