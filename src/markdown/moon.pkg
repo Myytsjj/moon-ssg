@@ -1,3 +1,1 @@
-options(
-  is_main: false,
-)
+// Empty package metadata for markdown module
