@@ -4,7 +4,6 @@ version = "0.3.0"
 
 readme = "README.md"
 
-
 license = "MIT"
 
 repository = "https://github.com/Myytsjj/moon-ssg"

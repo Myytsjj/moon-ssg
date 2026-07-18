@@ -74,3 +74,28 @@ moon test --update
 ## 开源协议
 
 本项目基于 MIT 许可证开源。
+
+## 第三方归属与开源许可说明
+
+本项目在设计与实现过程中，参考并借鉴了以下优秀的开源静态网站生成器（SSG）项目：
+
+1. **[Zola](https://github.com/getzola/zola)**
+   * **原许可证**：MIT License
+   * **参考范围说明**：参考了 Zola 的 Front-matter 元数据解析设计思路（如使用 `---` 包裹解析 `title`、`date`、`draft`、`tags`、`categories` 等基础字段）以及页面布局模板的替换逻辑。
+
+2. **[Hugo](https://github.com/gohugoio/hugo)**
+   * **原许可证**：Apache License 2.0
+   * **参考范围说明**：借鉴了 Hugo 的命令行生成逻辑与目录结构设计（包括 `content/` 存放源文件、`layouts/` 存放模板文件、`static/` 存放静态资源、`public/` 存放编译结果的分层结构），以及分类体系（Taxonomies）如 `tags` 和 `categories` 分类静态页面的自动生成与索引设计。
+
+3. **[CommonMark Spec](https://spec.commonmark.org/)**
+   * **参考范围说明**：本项目的 Markdown 解析器（`src/markdown`）基于 CommonMark 核心语法规范进行 MoonBit 原生开发与实现，不依赖任何第三方运行时解析库，实现了纯粹的 MoonBit 块级和行内元素渲染。
+
+## 作者身份与提交历史说明
+
+本项目的核心开发者与申请人为 **宾雨莉**。为满足不同托管平台（GitHub 与 GitLink）的单点贡献者与账号绑定要求，提交历史中可能存在以下不同的账号标识，在此予以澄清说明：
+
+- **GitHub 提交历史** 中的提交人 `Myytsjj <Myytsjj@users.noreply.github.com>` 及 `Myytsjj <myytsjj@github.com>` 均为申请人 **宾雨莉** 的 GitHub 账户。
+- **GitLink 提交历史** 中的提交人 `Myyafa <Myyafa@users.noreply.gitlink.org.cn>` 均为申请人 **宾雨莉** 的 GitLink 账户（在 GitLink 镜像仓库推送时，已通过历史重写将提交记录中的作者/提交者身份重写为 `Myyafa`，以确保在 GitLink 上仅显示平台创建者账号为唯一贡献者，杜绝虚拟贡献者记录）。
+
+本仓库的所有代码均为 **宾雨莉** 独立开发并享有完整版权，不存在任何第三方代码抄袭或版权纠纷。
+
